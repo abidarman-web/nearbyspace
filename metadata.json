@@ -1,0 +1,7 @@
+{
+  "name": "NearbySpace.app",
+  "description": "A premium co-working space rental platform connecting building owners with professionals in India.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
