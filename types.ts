@@ -7,11 +7,13 @@ export interface Space {
     lng: number;
   };
   price: number;
-  type: 'Private Office' | 'Hot Desk' | 'Meeting Room';
+  type: 'Private Office' | 'Hot Desk' | 'Meeting Room' | string;
   image: string;
   rating: number;
   amenities: string[];
   distance?: number; // Calculated at runtime
+  capacity?: number;
+  contact_email?: string;
 }
 
 export interface Review {

@@ -10,6 +10,14 @@ import { getUserLocation, calculateDistance } from '../utils/geo';
 import { MagnifyingGlassIcon, MapPinIcon, CurrencyRupeeIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 
+// High-quality corporate office images for the slider
+const HERO_SLIDES = [
+  "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80", // Modern corporate building interior
+  "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1920&q=80", // Bright meeting room
+  "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1920&q=80", // Stylish open desk area
+  "https://images.unsplash.com/photo-1604328698692-f76ea9498e76?auto=format&fit=crop&w=1920&q=80"  // Modern lounge/waiting area
+];
+
 const Home: React.FC = () => {
   const { reviews } = useReviews();
   const [spaces, setSpaces] = useState<Space[]>(FEATURED_SPACES);
@@ -26,6 +34,9 @@ const Home: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   
+  // Hero Slider State
+  const [currentSlide, setCurrentSlide] = useState(0);
+
   // Modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
@@ -35,6 +46,15 @@ const Home: React.FC = () => {
     if (saved) {
       setRecentSearches(JSON.parse(saved));
     }
+  }, []);
+
+  // Hero Slider Timer
+  useEffect(() => {
+    const slideInterval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(slideInterval);
   }, []);
 
   // Handle outside click to close suggestions
@@ -142,25 +162,29 @@ const Home: React.FC = () => {
       
       {/* Hero Section */}
       <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Parallax Background */}
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: 'url(https://picsum.photos/id/193/1920/1080)',
-            backgroundAttachment: 'fixed',
-            backgroundPosition: 'center',
-            backgroundSize: 'cover',
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-white dark:to-dark-bg"></div>
+        {/* Animated Background Slider */}
+        <div className="absolute inset-0 z-0">
+          {HERO_SLIDES.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                backgroundImage: `url(${slide})`,
+              }}
+            />
+          ))}
+          {/* Dark Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-white dark:to-dark-bg z-10"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-4xl px-4 text-center text-white animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+        <div className="relative z-20 w-full max-w-4xl px-4 text-center text-white animate-fade-in pt-16">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight drop-shadow-lg">
             Find Your Perfect <br className="hidden md:block" />
             <span className="text-corporate-400">Workspace Nearby</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto drop-shadow-md">
             Discover inspiring co-working environments and private offices across India. 
             No subscription fees. Just plug and play.
           </p>
@@ -178,7 +202,7 @@ const Home: React.FC = () => {
                 onFocus={() => setShowSuggestions(true)}
                 className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-300 px-4 py-3 text-lg"
               />
-              <button className="bg-corporate-600 hover:bg-corporate-500 text-white px-8 py-3 rounded-full font-semibold transition-all">
+              <button className="bg-corporate-600 hover:bg-corporate-500 text-white px-8 py-3 rounded-full font-semibold transition-all shadow-lg hover:shadow-corporate-500/50">
                 Search
               </button>
             </div>
@@ -235,6 +259,20 @@ const Home: React.FC = () => {
                Locating nearby spaces...
              </div>
           )}
+          
+          {/* Slider Indicators */}
+          <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-2">
+            {HERO_SLIDES.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
       </section>
 

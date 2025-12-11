@@ -1,6 +1,7 @@
 import React from 'react';
 import { Space } from '../types';
 import { MapPinIcon, StarIcon } from '@heroicons/react/24/solid';
+import { Link } from 'react-router-dom';
 
 interface SpaceCardProps {
   space: Space;
@@ -25,7 +26,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{space.title}</h3>
           <div className="flex items-center bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded text-xs">
             <StarIcon className="h-3 w-3 text-yellow-500 mr-1" />
-            <span className="font-bold text-yellow-700 dark:text-yellow-400">{space.rating}</span>
+            <span className="font-bold text-yellow-700 dark:text-yellow-400">{space.rating || 'New'}</span>
           </div>
         </div>
         
@@ -53,9 +54,12 @@ const SpaceCard: React.FC<SpaceCardProps> = ({ space }) => {
             <span className="text-lg font-bold text-corporate-600 dark:text-corporate-400">₹{space.price.toLocaleString()}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">/mo</span>
           </div>
-          <button className="bg-corporate-600 hover:bg-corporate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-corporate-500/30">
+          <Link 
+            to={`/space/${space.id}`}
+            className="bg-corporate-600 hover:bg-corporate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-corporate-500/30"
+          >
             View Details
-          </button>
+          </Link>
         </div>
       </div>
     </div>

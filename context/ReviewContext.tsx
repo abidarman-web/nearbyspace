@@ -26,11 +26,13 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .order('date', { ascending: false });
 
         if (error) {
-          console.error('Error fetching reviews:', error);
+          console.error('Error fetching reviews:', error.message || error);
           // Fallback to local constants if database connection fails or table missing
           setReviews(REVIEWS);
         } else if (data) {
           setReviews(data as Review[]);
+        } else {
+          setReviews(REVIEWS);
         }
       } catch (err) {
         console.error('Unexpected error fetching reviews:', err);
@@ -61,8 +63,8 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (data && data.length > 0) {
         setReviews(prev => [data[0] as Review, ...prev]);
       }
-    } catch (error) {
-      console.error('Error adding review:', error);
+    } catch (error: any) {
+      console.error('Error adding review:', error.message || error);
       alert('Failed to submit review. Please try again.');
     }
   };
@@ -77,8 +79,8 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (error) throw error;
 
       setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as const } : r));
-    } catch (error) {
-      console.error('Error approving review:', error);
+    } catch (error: any) {
+      console.error('Error approving review:', error.message || error);
     }
   };
 
@@ -92,8 +94,8 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (error) throw error;
 
       setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' as const } : r));
-    } catch (error) {
-      console.error('Error rejecting review:', error);
+    } catch (error: any) {
+      console.error('Error rejecting review:', error.message || error);
     }
   };
 
