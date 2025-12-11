@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Review } from '../types';
+import { supabase } from '../utils/supabaseClient';
 import { REVIEWS } from '../constants';
 
 interface ReviewContextType {
   reviews: Review[];
-  addReview: (review: Omit<Review, 'id' | 'status' | 'date'>) => void;
-  approveReview: (id: string) => void;
-  rejectReview: (id: string) => void;
+  addReview: (review: Omit<Review, 'id' | 'status' | 'date'>) => Promise<void>;
+  approveReview: (id: string) => Promise<void>;
+  rejectReview: (id: string) => Promise<void>;
   pendingCount: number;
 }
 
@@ -15,39 +16,85 @@ const ReviewContext = createContext<ReviewContextType | undefined>(undefined);
 export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
 
-  // Load reviews from local storage or initialize with default constants
+  // Fetch reviews from Supabase
   useEffect(() => {
-    const storedReviews = localStorage.getItem('nearbySpace_reviews');
-    if (storedReviews) {
-      setReviews(JSON.parse(storedReviews));
-    } else {
-      setReviews(REVIEWS);
-    }
+    const fetchReviews = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('date', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching reviews:', error);
+          // Fallback to local constants if database connection fails or table missing
+          setReviews(REVIEWS);
+        } else if (data) {
+          setReviews(data as Review[]);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching reviews:', err);
+        setReviews(REVIEWS);
+      }
+    };
+
+    fetchReviews();
   }, []);
 
-  // Save to local storage whenever reviews change
-  useEffect(() => {
-    if (reviews.length > 0) {
-      localStorage.setItem('nearbySpace_reviews', JSON.stringify(reviews));
+  const addReview = async (newReviewData: Omit<Review, 'id' | 'status' | 'date'>) => {
+    try {
+      // We rely on the database to generate the ID (uuid or auto-increment)
+      // or we can fallback to generating it if needed, but clean insert is better.
+      const payload = {
+        ...newReviewData,
+        status: 'pending',
+        date: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert([payload])
+        .select();
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setReviews(prev => [data[0] as Review, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error adding review:', error);
+      alert('Failed to submit review. Please try again.');
     }
-  }, [reviews]);
-
-  const addReview = (newReviewData: Omit<Review, 'id' | 'status' | 'date'>) => {
-    const newReview: Review = {
-      ...newReviewData,
-      id: `r${Date.now()}`,
-      status: 'pending',
-      date: new Date().toISOString(),
-    };
-    setReviews(prev => [newReview, ...prev]);
   };
 
-  const approveReview = (id: string) => {
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as const } : r));
+  const approveReview = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ status: 'approved' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as const } : r));
+    } catch (error) {
+      console.error('Error approving review:', error);
+    }
   };
 
-  const rejectReview = (id: string) => {
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' as const } : r));
+  const rejectReview = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ status: 'rejected' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' as const } : r));
+    } catch (error) {
+      console.error('Error rejecting review:', error);
+    }
   };
 
   const pendingCount = reviews.filter(r => r.status === 'pending').length;
